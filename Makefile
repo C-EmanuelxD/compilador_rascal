@@ -1,44 +1,52 @@
-
 SRC_DIR = src
 
+# Detecção de Windows (adiciona .exe se for Windows)
+ifdef OS
+   EXT = .exe
+else
+   EXT = 
+endif
+
 # Arquivos gerados
-PARSER_C = $(SRC_DIR)/rascal.tab.c
-PARSER_H = $(SRC_DIR)/rascal.tab.h
-LEX_C    = $(SRC_DIR)/lex.yy.c
+ANALISADOR_LEX    = $(SRC_DIR)/lex.yy.c
+PARSER            = $(SRC_DIR)/rascal.tab.c
+PARSER_H          = $(SRC_DIR)/rascal.tab.h
 
 # Arquivos de entrada
-YFILE = $(SRC_DIR)/rascal.y
-LFILE = $(SRC_DIR)/rascal.l
+LEXICO_L = $(SRC_DIR)/rascal.l
+PARSER_Y = $(SRC_DIR)/rascal.y
 
+# Target final (Executável)
+TARGET = $(SRC_DIR)/rascal$(EXT)
 
-TARGET = rascal
-
-
+# Define um arquivo de teste padrão caso ARGS não seja passado
+ARGS ?= testes_rascal/correto01.ras
 
 all: $(TARGET)
 
-$(TARGET): $(PARSER_C) $(LEX_C)
-	@gcc -o $(TARGET) $(PARSER_C) $(LEX_C) -I$(SRC_DIR) -lfl
-	@echo "✔ Build completo: ./$(TARGET)"
+# Build do Compilador (Linking)
+$(TARGET): $(ANALISADOR_LEX) $(PARSER)
+	@echo "Compilando tudo..."
+	gcc $(PARSER) $(ANALISADOR_LEX) -o $(TARGET) -I $(SRC_DIR)
+	@echo "Build completo! Executavel gerado em: $(TARGET)"
 
+# Build do Léxico (Flex)
+$(ANALISADOR_LEX): $(LEXICO_L) $(PARSER_H)
+	flex -o $(ANALISADOR_LEX) $(LEXICO_L)
 
-$(PARSER_C) $(PARSER_H): $(YFILE)
-	@bison -d $(YFILE) -o $(PARSER_C)
-	@echo "✔ Bison gerou: rascal.tab.c / rascal.tab.h"
-
-
-$(LEX_C): $(LFILE) $(PARSER_H)
-	@flex -o $(LEX_C) $(LFILE)
-	@echo "✔ Flex gerou: lex.yy.c"
-
+# Build do Parser (Bison)
+# O Bison gera o .c E o .h (que o flex precisa)
+$(PARSER) $(PARSER_H): $(PARSER_Y)
+	bison -d $(PARSER_Y) -o $(PARSER)
 
 clean:
-	@rm -f $(PARSER_C) $(PARSER_H) $(LEX_C) $(TARGET)
-	@echo "✔ Limpeza realizada"
+	@rm -f $(ANALISADOR_LEX) $(TARGET) $(PARSER) $(PARSER_H)
+	@echo "Limpeza concluida!"
 
-
-
+# Regra de execução
+# O '-' antes de $(TARGET) ignora erros de retorno do programa (caso seu main retorne 1)
 run: $(TARGET)
-	@./$(TARGET)
+	@echo "--- Executando o Parser ---"
+	./$(TARGET) $(ARGS)
 
 .PHONY: all clean run
