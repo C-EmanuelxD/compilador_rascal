@@ -17,10 +17,11 @@ PARSER_C        = $(SRC_DIR)/rascal.tab.c
 PARSER_H        = $(SRC_DIR)/rascal.tab.h
 
 # Arquivos fontes do projeto (C++)
-# AQUI ESTA A MUDANCA IMPORTANTE: Incluimos ast, printer e main
+# AQUI ESTA A MUDANCA IMPORTANTE: Incluimos ast, printer, semantic_visitor e main
 CPP_SOURCES     = $(SRC_DIR)/main.cpp \
                   $(SRC_DIR)/ast.cpp \
-                  $(SRC_DIR)/printer.cpp
+                  $(SRC_DIR)/printer.cpp \
+                  $(SRC_DIR)/visitador_semantico.cpp
 
 # Arquivos de entrada das ferramentas
 LEXICO_L = $(SRC_DIR)/rascal.l
@@ -30,7 +31,7 @@ PARSER_Y = $(SRC_DIR)/rascal.y
 TARGET = $(SRC_DIR)/rascal$(EXT)
 
 # Define um arquivo de teste padrão caso ARGS não seja passado
-ARGS ?= testes_rascal/correto10.ras
+ARGS ?= testes_rascal/errosemantico10.ras
 
 # ==========================================
 # REGRAS
@@ -51,7 +52,6 @@ $(ANALISADOR_LEX): $(LEXICO_L) $(PARSER_H)
 
 $(PARSER_C) $(PARSER_H): $(PARSER_Y)
 	bison -d $(PARSER_Y) -o $(PARSER_C)
-
 
 
 clean:

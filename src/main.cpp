@@ -2,6 +2,7 @@
 #include <cstdio>
 #include "ast.h"
 #include "printer.h"
+#include "visitador_semantico.h" // <--- 1. Inclua o cabeçalho do semântico
 #include "rascal.tab.h"
 
 extern FILE *yyin;
@@ -10,7 +11,6 @@ extern Programa *root;
 
 int main(int argc, char **argv)
 {
-
     if (argc < 2)
     {
         std::cerr << "Erro: Nenhum arquivo de entrada fornecido." << std::endl;
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    std::cout << "Iniciando Analise Sintatica..." << std::endl;
+    std::cout << ">>> Iniciando Analise Sintatica..." << std::endl;
 
     int resultado = yyparse();
 
@@ -35,12 +35,37 @@ int main(int argc, char **argv)
 
         if (root != nullptr)
         {
-            std::cout << "\nImprimindo Arvore Sintatica Abstrata (AST):" << std::endl;
-
+            // --- Impressão da AST (Opcional, mas útil para debug) ---
+            std::cout << "\n>>> Imprimindo Arvore Sintatica Abstrata (AST):" << std::endl;
             PrintVisitor printer;
             root->accept(printer);
+            std::cout << ">>> Fim da impressao.\n" << std::endl;
 
-            std::cout << "\n>>> Fim da impressao." << std::endl;
+            // --- 2. Análise Semântica ---
+            std::cout << ">>> Iniciando Analise Semantica..." << std::endl;
+            
+            SemanticVisitor semantic; // Instancia o visitador
+            root->accept(semantic);   // Percorre a árvore verificando regras
+
+            if (semantic.houveErro()) 
+            {
+                std::cerr << "\nFALHA: Ocorreram erros semanticos. Compilacao abortada." << std::endl;
+                // Deletamos a árvore antes de sair para liberar memória
+                delete root;
+                fclose(yyin);
+                return 1; // Retorna erro para o sistema operacional
+            }
+            else 
+            {
+                std::cout << "Analise Semantica concluida com SUCESSO!" << std::endl;
+                
+                // --- 3. Geração de Código (Próxima etapa) ---
+                // Aqui entraria o GeradorDeCodigo mepa;
+                // root->accept(mepa);
+            }
+            
+            // Limpeza final de memória
+            delete root;
         }
         else
         {
