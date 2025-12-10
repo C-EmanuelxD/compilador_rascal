@@ -1,0 +1,329 @@
+program TesteComplexoRascal;
+
+var
+    a, b, c, resultado: integer;
+    x, y, z: integer;
+    flag1, flag2, flag3: boolean;
+    contador, limite: integer;
+
+    function fatorial(n: integer): integer;
+    var
+        i, fat: integer;
+    begin
+        fat := 1;
+        i := 1;
+        while i <= n do
+        begin
+            fat := fat * i;
+            i := i + 1
+        end;
+        fatorial := fat
+    end;
+
+    function fibonacci(n: integer): integer;
+    var
+        a, b, temp, i: integer;
+    begin
+        if n <= 1 then
+            fibonacci := n
+        else
+        begin
+            a := 0;
+            b := 1;
+            i := 2;
+            while i <= n do
+            begin
+                temp := a + b;
+                a := b;
+                b := temp;
+                i := i + 1
+            end;
+            fibonacci := b
+        end
+    end;
+
+    function potencia(base, exp: integer): integer;
+    var
+        res, i: integer;
+    begin
+        res := 1;
+        i := 0;
+        while i < exp do
+        begin
+            res := res * base;
+            i := i + 1
+        end;
+        potencia := res
+    end;
+
+    function mdc(a, b: integer): integer;
+    var
+        temp: integer;
+    begin
+        while b <> 0 do
+        begin
+            temp := b;
+            b := a - (a div b) * b;
+            a := temp
+        end;
+        mdc := a
+    end;
+
+    function primo(n: integer): boolean;
+    var
+        i, metade: integer;
+        eh_primo: boolean;
+    begin
+        if n <= 1 then
+            primo := false
+        else
+        begin
+            if n = 2 then
+                primo := true
+            else
+            begin
+                eh_primo := true;
+                i := 2;
+                metade := n div 2;
+                while i <= metade do
+                begin
+                    if (n div i) * i = n then
+                    begin
+                        eh_primo := false;
+                        i := metade + 1
+                    end
+                    else
+                        i := i + 1
+                end;
+                primo := eh_primo
+            end
+        end
+    end;
+
+    function max3(a, b, c: integer): integer;
+    var
+        maior: integer;
+    begin
+        maior := a;
+        if b > maior then
+            maior := b;
+        if c > maior then
+            maior := c;
+        max3 := maior
+    end;
+
+    function min3(a, b, c: integer): integer;
+    var
+        menor: integer;
+    begin
+        menor := a;
+        if b < menor then
+            menor := b;
+        if c < menor then
+            menor := c;
+        min3 := menor
+    end;
+
+    function abs_val(n: integer): integer;
+    begin
+        if n < 0 then
+            abs_val := -n
+        else
+            abs_val := n
+    end;
+
+    function multiplicacao_russa(a, b: integer): integer;
+    var
+        resultado, temp_a, temp_b: integer;
+    begin
+        resultado := 0;
+        temp_a := a;
+        temp_b := b;
+        while temp_a > 0 do
+        begin
+            if (temp_a div 2) * 2 <> temp_a then
+                resultado := resultado + temp_b;
+            temp_a := temp_a div 2;
+            temp_b := temp_b + temp_b
+        end;
+        multiplicacao_russa := resultado
+    end;
+
+    procedure trocar(a, b: integer);
+    var
+        temp: integer;
+    begin
+        temp := a;
+        a := b;
+        b := temp
+    end;
+
+    procedure imprimir_linha;
+    begin
+        write(a, b, c)
+    end;
+
+    procedure calcular_tudo;
+    var
+        temp1, temp2, temp3: integer;
+    begin
+        temp1 := fatorial(a);
+        temp2 := fibonacci(b);
+        temp3 := potencia(c, 2);
+        resultado := temp1 + temp2 + temp3;
+        write(resultado)
+    end;
+
+    function expressao_complexa(x, y, z: integer): integer;
+    var
+        r1, r2, r3, r4: integer;
+    begin
+        r1 := potencia(x, 2) + potencia(y, 2);
+        r2 := max3(x, y, z) - min3(x, y, z);
+        r3 := abs_val(x - y) + abs_val(y - z);
+        r4 := mdc(abs_val(x), abs_val(y));
+        expressao_complexa := r1 + r2 + r3 + r4
+    end;
+
+    function nested_calls(n: integer): integer;
+    begin
+        nested_calls := fatorial(fibonacci(abs_val(n)))
+    end;
+
+    procedure teste_logico_complexo;
+    var
+        temp: integer;
+    begin
+        temp := 0;
+        if (a > b) and (b > c) then
+            temp := 1
+        else
+            if (a < b) or (b < c) then
+                temp := 2
+            else
+                temp := 3;
+        
+        if not ((a = b) or (b = c)) then
+            temp := temp + 10;
+        
+        write(temp)
+    end;
+
+    procedure loops_aninhados;
+    var
+        i, j, k, soma: integer;
+    begin
+        soma := 0;
+        i := 1;
+        while i <= 3 do
+        begin
+            j := 1;
+            while j <= 3 do
+            begin
+                k := 1;
+                while k <= 3 do
+                begin
+                    soma := soma + (i * 100 + j * 10 + k);
+                    k := k + 1
+                end;
+                j := j + 1
+            end;
+            i := i + 1
+        end;
+        write(soma)
+    end;
+
+begin
+    write(1111);
+    
+    read(a, b, c);
+    
+    write(2222);
+    resultado := fatorial(a);
+    write(resultado);
+    
+    write(3333);
+    resultado := fibonacci(b);
+    write(resultado);
+    
+    write(4444);
+    resultado := potencia(c, 3);
+    write(resultado);
+    
+    write(5555);
+    resultado := mdc(a, b);
+    write(resultado);
+    
+    write(6666);
+    flag1 := primo(a);
+    if flag1 then
+        write(1)
+    else
+        write(0);
+    
+    write(7777);
+    resultado := max3(a, b, c);
+    write(resultado);
+    
+    write(8888);
+    resultado := min3(a, b, c);
+    write(resultado);
+    
+    write(9999);
+    resultado := multiplicacao_russa(a, b);
+    write(resultado);
+    
+    write(11111);
+    resultado := expressao_complexa(a, b, c);
+    write(resultado);
+    
+    write(22222);
+    resultado := nested_calls(a);
+    write(resultado);
+    
+    write(33333);
+    teste_logico_complexo();
+    
+    write(44444);
+    loops_aninhados();
+    
+    write(55555);
+    x := 1;
+    while x <= 5 do
+    begin
+        if primo(x) then
+            write(x);
+        x := x + 1
+    end;
+    
+    write(66666);
+    contador := 0;
+    limite := 10;
+    while contador < limite do
+    begin
+        if (contador div 2) * 2 = contador then
+            write(contador);
+        contador := contador + 1
+    end;
+    
+    write(77777);
+    flag1 := (a > b) and (b > c);
+    flag2 := (a < b) or (c > a);
+    flag3 := not (a = b);
+    
+    if flag1 and flag2 and flag3 then
+        write(1)
+    else
+        if flag1 or flag2 or flag3 then
+            write(2)
+        else
+            write(3);
+    
+    write(88888);
+    if (fatorial(3) = 6) and (fibonacci(5) = 5) then
+        write(999)
+    else
+        write(0);
+    
+    write(99999)
+end.

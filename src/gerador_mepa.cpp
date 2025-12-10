@@ -17,7 +17,7 @@ void GeradorMepa::emit(std::string cmd, std::string arg) {
 }
 
 void GeradorMepa::emitLabel(std::string label) {
-    instrucoes.push_back(label + ":\tNADA");
+    instrucoes.push_back(label + ": NADA");
 }
 
 std::string GeradorMepa::novoRotulo() {
