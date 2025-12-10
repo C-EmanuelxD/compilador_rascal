@@ -9,7 +9,7 @@ endif
 
 # Definições de Compilador
 CXX = g++
-CXXFLAGS = -std=c++17 -I$(SRC_DIR)
+CXXFLAGS = -std=c++17 -I$(SRC_DIR) -Wno-write-strings
 
 # Arquivos gerados por Flex e Bison
 ANALISADOR_LEX  = $(SRC_DIR)/lex.yy.c
@@ -17,11 +17,12 @@ PARSER_C        = $(SRC_DIR)/rascal.tab.c
 PARSER_H        = $(SRC_DIR)/rascal.tab.h
 
 # Arquivos fontes do projeto (C++)
-# AQUI ESTA A MUDANCA IMPORTANTE: Incluimos ast, printer, semantic_visitor e main
+# ATUALIZADO: Adicionado gerador_mepa.cpp na lista
 CPP_SOURCES     = $(SRC_DIR)/main.cpp \
                   $(SRC_DIR)/ast.cpp \
                   $(SRC_DIR)/printer.cpp \
-                  $(SRC_DIR)/visitador_semantico.cpp
+                  $(SRC_DIR)/visitador_semantico.cpp \
+                  $(SRC_DIR)/gerador_mepa.cpp
 
 # Arquivos de entrada das ferramentas
 LEXICO_L = $(SRC_DIR)/rascal.l
@@ -39,25 +40,20 @@ ARGS ?= testes_rascal/errosemantico10.ras
 
 all: $(TARGET)
 
-
 $(TARGET): $(PARSER_C) $(ANALISADOR_LEX) $(CPP_SOURCES)
 	@echo "Compilando tudo..."
 	$(CXX) $(CXXFLAGS) $(CPP_SOURCES) $(PARSER_C) $(ANALISADOR_LEX) -o $(TARGET)
 	@echo "Build completo! Executavel gerado em: $(TARGET)"
 
-
 $(ANALISADOR_LEX): $(LEXICO_L) $(PARSER_H)
 	flex -o $(ANALISADOR_LEX) $(LEXICO_L)
-
 
 $(PARSER_C) $(PARSER_H): $(PARSER_Y)
 	bison -d $(PARSER_Y) -o $(PARSER_C)
 
-
 clean:
-	@rm -f $(ANALISADOR_LEX) $(TARGET) $(PARSER_C) $(PARSER_H)
+	@rm -f $(ANALISADOR_LEX) $(TARGET) $(PARSER_C) $(PARSER_H) *.mep
 	@echo "Limpeza concluida!"
-
 
 run: $(TARGET)
 	@echo "--- Executando o Parser ---"

@@ -6,12 +6,9 @@
     #include <string>
     #include "ast.h"
 
-    extern Programa* root;
-
     extern int yylex();
     extern int yylineno;
     extern char* yytext;
-
     void yyerror(const char *s);
 
     Programa* root = nullptr;
@@ -30,6 +27,7 @@
     };
 }
 
+// mensagens de erro do bison
 %define parse.error verbose
 
 %token T_PROGRAM T_BEGIN T_END T_VAR T_PROCEDURE T_FUNCTION
@@ -44,6 +42,7 @@
 %token T_ATRIB 
 %token T_IGUAL T_DIFERENTE T_MENOR T_MENORIGUAL T_MAIOR T_MAIORIGUAL
 %token T_MAIS T_MENOS T_VEZES
+%token T_ERRO
 
 %union{
     int ival;
@@ -56,13 +55,16 @@
     DeclararVar* ptr_decl_var;
     DeclararSubrotina* ptr_decl_sub;
     RascalType type_val;
+    
     BlocoData* ptr_dados_bloco;
+    
     std::vector<std::string>* vec_str;
     std::vector<DeclararVar*>* vec_decl_var;
     std::vector<DeclararSubrotina*>* vec_decl_sub;
     std::vector<Comando*>* vec_cmd;
     std::vector<Expressao*>* vec_expr;
 }
+
 %token <ival> T_NUM
 %token <sval> T_ID     
 
@@ -94,13 +96,13 @@
 %type <vec_cmd> lista_comandos
 %type <vec_expr> lista_expressoes lista_expressoes_vazio
 
-/* Simbolo inicial */
+/* Simbolo inicial da gramática */
 %start programa
 
 %%
+
     programa : T_PROGRAM T_ID T_SEMICOLON bloco T_PONTO{
         root = new Programa($2);
-        
         
         if ($4->vars) root->variaveis_globais = *($4->vars);
         if ($4->subs) root->subrotinas_globais = *($4->subs);
@@ -117,40 +119,30 @@
         $$->corpo = $3;
     };
 
-    /* tratar o caso de var ou function nao existir*/
-    declaracao_var_vazio :  {$$ = new std::vector<DeclararVar*>();} | secao_declaracao_variaveis {$$ = $1;};
-    declaracao_subrotina_vazio :  { $$ = new std::vector<DeclararSubrotina*>(); } | secao_declaracao_subrotinas { $$ = $1; };
+    declaracao_var_vazio 
+        : /* vazio */ { $$ = new std::vector<DeclararVar*>(); } 
+        | secao_declaracao_variaveis { $$ = $1; };
 
-    /*
-        <seção_declaração_variáveis> ::=
-        'var' <declaração_variáveis> ';' { <declaração_variáveis> ';' }
-        <declaração_variáveis> ::=
-        <lista_identificadores> ':' <tipo>
-        <lista_identificadores> ::=
-        <identificador> { ',' <identificador> }
-        <tipo> ::=
-        'boolean' | 'integer'
+    declaracao_subrotina_vazio 
+        : /* vazio */ { $$ = new std::vector<DeclararSubrotina*>(); } 
+        | secao_declaracao_subrotinas { $$ = $1; };
 
-        o bloco abaixo faz isso
-    */
     secao_declaracao_variaveis : T_VAR repeticao_declaracao { $$ = $2; };
 
-    repeticao_declaracao : declaracao_vars T_SEMICOLON{
-        { 
+    repeticao_declaracao 
+        : declaracao_vars T_SEMICOLON { 
             $$ = new std::vector<DeclararVar*>();
             $$->push_back($1);
         }
-    } | repeticao_declaracao declaracao_vars T_SEMICOLON{
-        {
+        | repeticao_declaracao declaracao_vars T_SEMICOLON {
             $$ = $1;
             $$->push_back($2);
         };
-    };
 
-    declaracao_vars: lista_identificadores T_COLON tipo{
+    declaracao_vars: lista_identificadores T_COLON tipo {
         $$ = new DeclararVar(*$1, $3);
         delete $1;
-    };;
+    };
 
     lista_identificadores
         : T_ID {
@@ -168,7 +160,6 @@
         : T_BOOLEAN { $$ = TP_BOOL; }
         | T_INTEGER { $$ = TP_INT; };
 
-
     secao_declaracao_subrotinas 
         : declaracao_subrotina T_SEMICOLON {
             $$ = new std::vector<DeclararSubrotina*>();
@@ -178,27 +169,26 @@
             $$ = $1;
             $$->push_back($2);
         };
-    declaracao_subrotina : procedimento { $$ = $1; } | funcao { $$ = $1; };
+
+    declaracao_subrotina 
+        : procedimento { $$ = $1; } 
+        | funcao { $$ = $1; };
 
     procedimento : T_PROCEDURE T_ID parametros_gerais_subrotina T_SEMICOLON bloco_subrotina {
-
         DeclararProcedimento* proc = new DeclararProcedimento($2);
-
         if ($3) proc->parametros = *($3);
         
-    
         if ($5->vars) proc->variaveis_locais = *($5->vars);
         proc->corpo = $5->corpo;
 
         $$ = proc;
         free($2);
-        delete $3; delete $5;
+        delete $3;
+        delete $5;
     };
 
     funcao : T_FUNCTION T_ID parametros_gerais_subrotina T_COLON tipo T_SEMICOLON bloco_subrotina {
-        // Cria funcao com tipo de retorno
         DeclararFuncao* func = new DeclararFuncao($2, $5);
-        
         if ($3) func->parametros = *($3);
         
         if ($7->vars) func->variaveis_locais = *($7->vars);
@@ -206,12 +196,14 @@
 
         $$ = func;
         free($2);
-        delete $3; delete $7;
+        delete $3;
+        delete $7;
     };
 
     parametros_gerais_subrotina 
-        : { $$ = new std::vector<DeclararVar*>(); }
+        : /* vazio */ { $$ = new std::vector<DeclararVar*>(); }
         | T_LPAREN lista_parametros T_RPAREN { $$ = $2; };
+
     lista_parametros 
         : secao_parametros {
             $$ = new std::vector<DeclararVar*>();
@@ -221,6 +213,7 @@
             $$ = $1;
             $$->push_back($3);
         };
+
     secao_parametros : lista_identificadores T_COLON tipo {
         $$ = new DeclararVar(*$1, $3);
         delete $1;
@@ -229,10 +222,9 @@
     bloco_subrotina : declaracao_var_vazio comando_composto {
         $$ = new BlocoData();
         $$->vars = $1;
-        $$->subs = nullptr; // Não permitido no Rascal
+        $$->subs = nullptr; 
         $$->corpo = $2;
     };
-
 
     comando_composto : T_BEGIN lista_comandos T_END {
         $$ = new CmdBeginEnd();
@@ -258,11 +250,40 @@
         | leitura { $$ = $1; }
         | escrita { $$ = $1; }
         | comando_composto { $$ = $1; }
+        | error T_SEMICOLON {yyerrok;$$ = nullptr;  printf("Erro sintatico recuperado. Continuando analise\n");}
         | /* vazio */ { $$ = nullptr; };
 
     atribuicao : T_ID T_ATRIB expressao {
         $$ = new CmdAtribuicao($1, $3);
         free($1);
+    };
+
+    chamada_procedimento: T_ID T_LPAREN lista_expressoes_vazio T_RPAREN {
+        $$ = new CmdChamadaProc($1, *($3));
+        free($1);
+        delete $3;
+    };
+    
+    condicional 
+        : T_IF expressao T_THEN comando %prec LOWER_THAN_ELSE {
+            $$ = new CmdIf($2, $4, nullptr);
+        }
+        | T_IF expressao T_THEN comando T_ELSE comando {
+            $$ = new CmdIf($2, $4, $6);
+        };
+
+    repeticao : T_WHILE expressao T_DO comando {
+        $$ = new CmdWhile($2, $4);
+    };
+
+    leitura: T_READ T_LPAREN lista_identificadores T_RPAREN {
+        $$ = new CmdRead(*$3);
+        delete $3;
+    };
+
+    escrita : T_WRITE T_LPAREN lista_expressoes_vazio T_RPAREN {
+        $$ = new CmdWrite(*$3);
+        delete $3;
     };
 
     expressao: expressao_simples { $$ = $1; }
@@ -308,34 +329,6 @@
         | T_LPAREN expressao T_RPAREN { $$ = $2; }
         | T_NOT fator { $$ = new ExprUnaria(OP_NOT, $2); };
 
-    chamada_procedimento: T_ID T_LPAREN lista_expressoes_vazio T_RPAREN {
-        $$ = new CmdChamadaProc($1, *($3));
-        free($1);
-        delete $3;
-    };
-    
-    condicional 
-        : T_IF expressao T_THEN comando %prec LOWER_THAN_ELSE {
-            $$ = new CmdIf($2, $4, nullptr);
-        }
-        | T_IF expressao T_THEN comando T_ELSE comando {
-            $$ = new CmdIf($2, $4, $6);
-        };
-
-    repeticao : T_WHILE expressao T_DO comando {
-        $$ = new CmdWhile($2, $4);
-    };
-
-    leitura: T_READ T_LPAREN lista_identificadores T_RPAREN {
-        $$ = new CmdRead(*$3);
-        delete $3;
-    };
-
-    escrita : T_WRITE T_LPAREN lista_expressoes_vazio T_RPAREN {
-        $$ = new CmdWrite(*$3);
-        delete $3;
-    };
-
     lista_expressoes_vazio 
         : /* vazio */ { $$ = new std::vector<Expressao*>(); }
         | lista_expressoes { $$ = $1; };
@@ -349,9 +342,8 @@
             $$ = $1;
             $$->push_back($3);
         };
-    
-%%
 
+%%
 
 void yyerror(const char *s) {
     fprintf(stderr, "Erro de sintaxe na linha %d: %s. Token encontrado: '%s'\n", yylineno, s, yytext);

@@ -1,0 +1,12 @@
+program Final;
+var
+   x, y, res: integer;
+begin
+   read(x);
+   y := 5;
+   if x > 10 then
+      res := x + y
+   else
+      res := x * y;
+   write(res)
+end.
