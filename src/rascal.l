@@ -61,7 +61,8 @@ NUM         [0-9]+
 {ID}        {yylval.sval = strdup(yytext); return T_ID; }
 {NUM}       {yylval.ival = atoi(yytext); return T_NUM; }
 
-.           { printf("Erro lexico, caractere inválido na linha %d: '%s'\n", yylineno, yytext); exit(1);}
+.           { printf("Erro lexico, caractere inválido na linha %d: '%s'\n", yylineno, yytext); return T_ERRO; }
+
 
 %%
 
