@@ -44,3 +44,7 @@ testes_rascal/
 exemplo_arvore/
 classes_ast.txt
 ast_python.py
+lex.yy.c
+rascal.tab.h
+rascal.tab.c
+teste_final.ras
