@@ -2,7 +2,7 @@
 #define SEMANTIC_VISITOR_H
 
 #include "visitor.h"
-#include "tabela_simbolos.h" // Certifique-se que este arquivo existe com a classe TabelaSimbolos
+#include "tabela_simbolos.h"
 #include <iostream>
 #include <string>
 
@@ -11,9 +11,9 @@ private:
     TabelaSimbolos ts;
     bool temErro;
 
-    // --- CONTROLE DE RETORNO DE FUNÇÃO ---
-    std::string nomeFuncaoAtual; // Armazena o nome da função sendo processada
-    bool encontrouRetorno;       // Flag para saber se houve atribuição ao nome da função
+
+    std::string nomeFuncaoAtual;
+    bool encontrouRetorno; 
 
     void erro(const std::string& msg) {
         std::cerr << "ERRO SEMANTICO: " << msg << std::endl;

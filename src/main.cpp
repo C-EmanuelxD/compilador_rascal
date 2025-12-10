@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     {
         std::cout << "Sintaxe correta." << std::endl;
 
-        // (Opcional) Imprimir AST para debug
+    
         // std::cout << "\n>>> Imprimindo AST:" << std::endl;
         // PrintVisitor printer;
         // root->accept(printer);

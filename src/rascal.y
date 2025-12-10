@@ -19,7 +19,7 @@
     #include <vector>
     #include <string>
 
-    // Estrutura auxiliar para transportar os dados do bloco (Vars + Subs + Corpo)
+
     struct BlocoData {
         std::vector<DeclararVar*>* vars;
         std::vector<DeclararSubrotina*>* subs;

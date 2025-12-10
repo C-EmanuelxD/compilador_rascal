@@ -1,15 +1,13 @@
 #include "visitador_semantico.h"
 
-// --- FUNÇÃO AUXILIAR ---
+
 std::string TypeToStr(RascalType t) {
     if (t == TP_INT) return "integer";
     if (t == TP_BOOL) return "boolean";
     return "void/sem_tipo";
 }
 
-// ==========================================================
-//                   EXPRESSÕES
-// ==========================================================
+
 
 void SemanticVisitor::visit(ExprValorInteiro& node) {
     node.type = TP_INT;
@@ -36,7 +34,7 @@ void SemanticVisitor::visit(ExprBinaria& node) {
     RascalType t1 = node.expr1->type;
     RascalType t2 = node.expr2->type;
 
-    // Se um dos lados já tem erro, propaga o erro sem spammar mais mensagens
+
     if (t1 == TP_SEM_TIPO || t2 == TP_SEM_TIPO) {
         node.type = TP_SEM_TIPO;
         return;
@@ -106,7 +104,7 @@ void SemanticVisitor::visit(ExprUnaria& node) {
             node.type = TP_SEM_TIPO;
         }
     } else {
-        node.type = t; // Caso seja apenas parenteses ou mais unário
+        node.type = t;
     }
 }
 
@@ -125,20 +123,20 @@ void SemanticVisitor::visit(ExprChamadaFunc& node) {
         return;
     }
 
-    // Verificar contagem de argumentos
+
     if (node.argumentos.size() != s->tiposParametros.size()) {
         erro("Numero incorreto de argumentos para funcao '" + node.name + "'. Esperado: " + 
              std::to_string(s->tiposParametros.size()) + ", Recebido: " + std::to_string(node.argumentos.size()));
-        node.type = TP_SEM_TIPO; // Define erro para não cascatear
+        node.type = TP_SEM_TIPO;
     } else {
-        // Verificar tipos dos argumentos
+
         for (size_t i = 0; i < node.argumentos.size(); i++) {
             node.argumentos[i]->accept(*this);
             if (node.argumentos[i]->type != s->tiposParametros[i]) {
                 erro("Tipo incompativel no argumento " + std::to_string(i+1) + " da chamada de '" + node.name + "'.");
             }
         }
-        node.type = s->tipo; // O tipo da expressão é o retorno da função
+        node.type = s->tipo;
     }
 }
 
@@ -153,7 +151,7 @@ void SemanticVisitor::visit(CmdBeginEnd& node) {
 }
 
 void SemanticVisitor::visit(CmdAtribuicao& node) {
-    node.expressao->accept(*this); // Calcula tipo da direita
+    node.expressao->accept(*this);
 
     Simbolo* s = ts.buscar(node.variavel);
     
@@ -162,18 +160,18 @@ void SemanticVisitor::visit(CmdAtribuicao& node) {
         return;
     }
     
-    // <--- LOGICA DE RETORNO: Verifica se estamos atribuindo ao nome da função atual
+
     if (!nomeFuncaoAtual.empty() && node.variavel == nomeFuncaoAtual) {
         encontrouRetorno = true;
     }
     
-    // Regras de atribuição
+
     if (s->categoria != CAT_VAR && s->categoria != CAT_PARAM && s->categoria != CAT_FUNC) {
         erro("Nao e possivel atribuir valor ao identificador '" + node.variavel + "' (nao e variavel nem retorno de funcao).");
         return;
     }
     
-    // Verificação de tipos
+
     if (node.expressao->type != TP_SEM_TIPO && s->tipo != node.expressao->type) {
         erro("Tipos incompativeis na atribuicao para '" + node.variavel + "'. Variavel e " + 
              TypeToStr(s->tipo) + ", mas expressao e " + TypeToStr(node.expressao->type));
@@ -235,16 +233,14 @@ void SemanticVisitor::visit(CmdRead& node) {
 void SemanticVisitor::visit(CmdWrite& node) {
     for (auto expr : node.expressoes) {
         expr->accept(*this);
-        // O write aceita int e bool, então apenas verificamos se a expressão é válida
+
         if (expr->type == TP_SEM_TIPO) {
             // O erro já foi reportado na expressão
         }
     }
 }
 
-// ==========================================================
-//                   DECLARAÇÕES
-// ==========================================================
+
 
 void SemanticVisitor::visit(DeclararVar& node) {
     for (const auto& nome : node.nomes) {
@@ -258,7 +254,7 @@ void SemanticVisitor::visit(DeclararVar& node) {
 void SemanticVisitor::visit(DeclararProcedimento& node) {
     Simbolo sProc(node.nome, CAT_PROC, TP_SEM_TIPO);
     
-    // Coleta tipos dos parâmetros para a assinatura
+
     for (auto decl : node.parametros) {
         for (size_t i=0; i < decl->nomes.size(); i++) {
             sProc.tiposParametros.push_back(decl->tipo);
@@ -271,21 +267,19 @@ void SemanticVisitor::visit(DeclararProcedimento& node) {
 
     ts.entrarEscopo();
 
-    // Inserir parâmetros no escopo local
     for (auto decl : node.parametros) {
-        // Usa lógica manual para garantir que entrem como CAT_PARAM (opcional, mas bom para debug)
+
         for (const auto& nome : decl->nomes) {
             Simbolo s(nome, CAT_PARAM, decl->tipo);
             if (!ts.inserir(s)) erro("Parametro duplicado: " + nome);
         }
     }
 
-    // Variáveis locais
+
     for (auto varLocal : node.variaveis_locais) {
         varLocal->accept(*this);
     }
 
-    // Corpo
     if (node.corpo) node.corpo->accept(*this);
 
     ts.sairEscopo();
@@ -294,7 +288,7 @@ void SemanticVisitor::visit(DeclararProcedimento& node) {
 void SemanticVisitor::visit(DeclararFuncao& node) {
     Simbolo sFunc(node.nome, CAT_FUNC, node.tipo_retorno);
     
-    // Assinatura
+
     for (auto decl : node.parametros) {
         for (size_t i=0; i < decl->nomes.size(); i++) {
             sFunc.tiposParametros.push_back(decl->tipo);
@@ -307,14 +301,13 @@ void SemanticVisitor::visit(DeclararFuncao& node) {
 
     ts.entrarEscopo();
 
-    // <--- LOGICA DE RETORNO: Prepara contexto ---
     std::string contextoAnterior = nomeFuncaoAtual; 
     bool statusAnterior = encontrouRetorno;
     
     nomeFuncaoAtual = node.nome;
-    encontrouRetorno = false; // Reset para a função atual
+    encontrouRetorno = false;
 
-    // Parâmetros
+
     for (auto decl : node.parametros) {
         for (const auto& nome : decl->nomes) {
             Simbolo s(nome, CAT_PARAM, decl->tipo);
@@ -322,20 +315,19 @@ void SemanticVisitor::visit(DeclararFuncao& node) {
         }
     }
 
-    // Variáveis locais
     for (auto varLocal : node.variaveis_locais) {
         varLocal->accept(*this);
     }
 
-    // Corpo da função
+
     if (node.corpo) node.corpo->accept(*this);
 
-    // <--- LOGICA DE RETORNO: Verifica se houve retorno ---
+
     if (!encontrouRetorno) {
         erro("A funcao '" + node.nome + "' nao possui retorno definido (faltou atribuicao '" + node.nome + " := ...').");
     }
 
-    // Restaura contexto (caso existam funções aninhadas no futuro)
+
     nomeFuncaoAtual = contextoAnterior;
     encontrouRetorno = statusAnterior;
 
@@ -344,20 +336,19 @@ void SemanticVisitor::visit(DeclararFuncao& node) {
 
 
 void SemanticVisitor::visit(Programa& node) {
-    // Escopo Global
+
     ts.inserir(Simbolo(node.nome_prog, CAT_PROG, TP_SEM_TIPO));
 
-    // Variáveis Globais
+
     for (auto var : node.variaveis_globais) {
         var->accept(*this);
     }
 
-    // Subrotinas Globais
     for (auto sub : node.subrotinas_globais) {
         sub->accept(*this);
     }
 
-    // Bloco Principal
+
     if (node.bloco_principal) {
         node.bloco_principal->accept(*this);
     }
