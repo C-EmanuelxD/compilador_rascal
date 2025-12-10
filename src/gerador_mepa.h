@@ -2,6 +2,7 @@
 #define GERADOR_MEPA_H
 
 #include "visitor.h"
+#include "ast.h"
 #include <iostream>
 #include <vector>
 #include <map>
@@ -26,7 +27,6 @@ private:
     void emit(std::string cmd, std::string arg = "");
     void emitLabel(std::string label);
     std::string novoRotulo();
-    std::string novoRotuloProc();
     
     void entrarEscopo();
     void sairEscopo(int nVarsLocais);
